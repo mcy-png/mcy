@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M-Cycle - Life OS</title>
+    
+    <!--  苹果 iOS 专属 PWA 标签 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="M-Cycle">
+    <link rel="apple-touch-icon" href="https://api.dicebear.com/7.x/initials/svg?seed=M&backgroundColor=1a1a1a&textColor=ffffff">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paper: &apos;#F4F2ED&apos;, ink: &apos;#1A1A1A&apos;, charcoal: &apos;#222222&apos;, ash: &apos;#716D68&apos;,
+                        wood: { 50: &apos;#F4EFEA&apos;, 100: &apos;#E6D9CE&apos;, 500: &apos;#B58D66&apos; },
+                        moss: { 100: &apos;#D5DFD1&apos;, 500: &apos;#758870&apos; },
+                        rose: { 50: &apos;#F7F0EF&apos;, 100: &apos;#EADCDA&apos;, 500: &apos;#B65C53&apos; },
+                        sand: { 100: &apos;#E8E5DF&apos;, 500: &apos;#9B9484&apos; },
+                        borderline: &apos;#E0DDD5&apos;
+                    },
+                    fontFamily: {
+                        sans: [&apos;"PingFang SC"&apos;, &apos;"Microsoft YaHei"&apos;, &apos;sans-serif&apos;],
+                        serif: [&apos;"Noto Serif SC"&apos;, &apos;"Songti SC"&apos;, &apos;serif&apos;],
+                    },
+                    boxShadow: {
+                        &apos;premium&apos;: &apos;0 10px 40px -10px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.03)&apos;,
+                        &apos;inner-paper&apos;: &apos;inset 0 2px 4px 0 rgba(255,255,255,0.7)&apos;,
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { display: none; }
+        body { -ms-overflow-style: none; scrollbar-width: none; touch-action: pan-y; background: #EBE9E4; }
+        .paper-texture { background-color: #F4F2ED; background-image: url("data:image/svg+xml,%3Csvg viewBox=&apos;0 0 200 200&apos; xmlns=&apos;http://www.w3.org/2000/svg&apos;%3E%3Cfilter id=&apos;noiseFilter&apos;%3E%3CfeTurbulence type=&apos;fractalNoise&apos; baseFrequency=&apos;0.8&apos; numOctaves=&apos;3&apos;/%3E%3C/filter%3E%3Crect width=&apos;100%25&apos; height=&apos;100%25&apos; filter=&apos;url(%23noiseFilter)&apos; opacity=&apos;0.04&apos;/%3E%3C/svg%3E"); }
+        .tab-content { display: none; height: calc(100vh - 150px); overflow-y: auto; padding-bottom: 100px;}
+        .tab-content.active { display: block; }
+        .swipe-transition { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+        .snap-x-mandatory { scroll-snap-type: x mandatory; }
+        .snap-center { scroll-snap-align: center; }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen sm:py-4 select-none">
+
+    <div class="w-full max-w-md paper-texture h-screen sm:h-[850px] relative sm:shadow-2xl sm:rounded-[40px] overflow-hidden sm:border-[6px] border-[#333] flex flex-col">
+        
+        <!-- ================= 全局页眉 ================= -->
+        <header class="px-7 pt-14 pb-4 flex justify-between items-end relative z-20 bg-gradient-to-b from-[#F4F2ED] to-transparent">
+            <div>
+                <p class="font-serif text-ash text-[11px] font-bold tracking-[0.2em] mb-1.5 uppercase">M-Cycle</p>
+                <h1 id="main-title" class="text-3xl font-serif font-bold tracking-wide text-charcoal">今日 Today</h1>
+            </div>
+            <div onclick="document.getElementById(&apos;modal-settings&apos;).classList.remove(&apos;hidden&apos;)" class="w-10 h-10 rounded-full bg-charcoal flex items-center justify-center text-paper shadow-md font-serif font-bold cursor-pointer hover:scale-105 transition">M</div>
+        </header>
+
+        <main class="flex-1 overflow-hidden relative z-10">
+            
+            <!-- ================= 1. TODAY ================= -->
+            <div id="tab-today" class="tab-content active px-5 pt-2">
+                <div class="bg-ink rounded-2xl p-6 shadow-premium mb-8 relative overflow-hidden">
+                    <span class="absolute -top-2 -left-1 text-7xl text-white font-serif opacity-10">“</span>
+                    <p class="text-lg text-[#F9F8F6] font-serif leading-relaxed relative z-10 font-medium">我语言的局限，就是我世界的局限。</p>
+                    <p class="text-xs text-[#A0A0A0] font-serif text-right mt-3 mb-5">—— 维特根斯坦</p>
+                    <div class="pl-3 border-l-2 border-wood-500 bg-white/5 p-3 rounded-r-lg">
+                        <p class="text-xs text-[#D0D0D0] leading-relaxed"><span class="font-bold text-white mr-1">陈嘉映 评：</span>去阅读、去学习新的概念，并非为了卖弄学识，而是在实质性地拓宽你感知现实的边界。</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-end mb-4 px-2">
+                    <div>
+                        <h2 class="text-base text-charcoal font-bold tracking-wider">今日快捷导航</h2>
+                        <span class="text-[10px] text-ash font-medium uppercase">Shortcuts</span>
+                    </div>
+                </div>
+                <div id="today-list" class="space-y-4 px-1"></div>
+            </div>
+
+            <!-- ================= 2. KNOWLEDGE ================= -->
+            <div id="tab-knowledge" class="tab-content px-5 pt-2">
+                <div class="bg-white/60 border border-white rounded-2xl p-6 mb-6 shadow-premium shadow-inner-paper">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-sm font-bold text-charcoal">动态营养分析</h2>
+                        <span class="text-[10px] text-ash border border-borderline px-2 py-0.5 rounded bg-paper">Based on DB</span>
+                    </div>
+                    <div class="flex items-center space-x-6">
+                        <div id="dynamic-pie" class="w-24 h-24 rounded-full flex items-center justify-center shadow-inner shrink-0 transition-all duration-700">
+                            <div class="w-16 h-16 bg-paper rounded-full flex flex-col items-center justify-center">
+                                <span class="text-[9px] text-ash">项目数</span>
+                                <span id="pie-total-count" class="text-sm font-bold font-serif text-charcoal">0</span>
+                            </div>
+                        </div>
+                        <div class="text-[10px] space-y-1.5 text-charcoal font-medium w-full" id="pie-legend"></div>
+                    </div>
+                </div>
+
+                <!--  恢复的拓展推荐模块 -->
+                <div class="mb-6">
+                    <h2 class="px-2 text-sm text-charcoal font-bold mb-3 flex items-center">
+                        短板补充 · 拓展推荐 <span class="ml-2 text-[9px] font-normal bg-wood-100 text-wood-500 px-1.5 py-0.5 rounded">M-Select</span>
+                    </h2>
+                    <div class="flex overflow-x-auto snap-x-mandatory space-x-3 pb-2 px-1">
+                        <div class="snap-center shrink-0 w-56 p-4 bg-white/70 border border-white rounded-xl shadow-sm">
+                            <div class="flex justify-between mb-2"><span class="text-[9px] bg-paper px-1.5 rounded"> 播客</span><span class="text-[9px] text-wood-500 border border-wood-500 px-1 rounded">9.6分</span></div>
+                            <h3 class="text-xs font-bold mb-1">《面基》现代经济逻辑</h3>
+                            <p class="text-[10px] text-ash line-clamp-2">一级市场投资人对谈，跳出直觉，用社科经济学重构认知。</p>
+                        </div>
+                        <div class="snap-center shrink-0 w-56 p-4 bg-white/70 border border-white rounded-xl shadow-sm">
+                            <div class="flex justify-between mb-2"><span class="text-[9px] bg-paper px-1.5 rounded"> 视频</span><span class="text-[9px] text-wood-500 border border-wood-500 px-1 rounded">必看</span></div>
+                            <h3 class="text-xs font-bold mb-1">罗翔《刑法学讲义》</h3>
+                            <p class="text-[10px] text-ash line-clamp-2">法学不仅是条文，更是人类对正义的妥协。补齐法学逻辑底盘。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-end mb-3 px-2">
+                    <h2 class="text-base text-charcoal font-bold tracking-wider">在学轨道</h2>
+                    <button onclick="document.getElementById(&apos;modal-k&apos;).classList.remove(&apos;hidden&apos;)" class="w-7 h-7 flex items-center justify-center rounded-full border border-ash/50 text-ash hover:bg-ash hover:text-white transition shadow-sm bg-white/50">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                </div>
+                <div id="knowledge-list" class="space-y-3"></div>
+            </div>
+
+            <!-- ================= 3. ACTION ================= -->
+            <div id="tab-action" class="tab-content px-5 pt-2">
+                <div class="flex justify-between items-end mb-4 px-2">
+                    <div>
+                        <h2 class="text-base text-charcoal font-bold tracking-wider">行动档案</h2>
+                        <span class="text-[10px] text-ash font-medium uppercase">Active Records</span>
+                    </div>
+                    <button onclick="document.getElementById(&apos;modal-a&apos;).classList.remove(&apos;hidden&apos;)" class="w-7 h-7 flex items-center justify-center rounded-full border border-ash/50 text-ash hover:bg-ash hover:text-white transition shadow-sm bg-white/50">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                </div>
+                <!-- 动态列表 -->
+                <div id="action-list" class="space-y-8"></div>
+            </div>
+
+            <!-- ================= 4. RHYTHM ================= -->
+            <div id="tab-rhythm" class="tab-content px-5 pt-2">
+                <div class="bg-ink rounded-2xl p-6 shadow-2xl mb-6 relative">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 class="text-lg text-[#F9F8F6] font-bold tracking-wider">周期历</h2>
+                            <span class="text-[10px] text-[#A0A0A0] font-medium tracking-widest uppercase" id="cal-month">Month</span>
+                        </div>
+                        <!--  新增：查看历史记录按钮 -->
+                        <button onclick="document.getElementById(&apos;modal-r-history&apos;).classList.remove(&apos;hidden&apos;)" class="text-[10px] text-rose-300 border border-rose-300/50 px-2 py-1 rounded hover:bg-rose-500 hover:text-white transition">往期记录</button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-y-3 text-center text-[10px] text-ash font-bold mb-3 uppercase">
+                        <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+                    </div>
+                    <div id="rhythm-calendar" class="grid grid-cols-7 gap-y-3 text-center text-sm font-medium text-[#D0D0D0]"></div>
+                    <div class="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
+                        <div>
+                            <p class="text-[11px] text-[#A0A0A0] mb-0.5">本次历时</p>
+                            <p class="text-base text-[#F9F8F6] font-serif font-bold"><span id="duration-text">0</span> <span class="text-[10px] font-sans font-normal">天</span></p>
+                        </div>
+                        <!--  归档并清空 -->
+                        <button onclick="archiveCal()" class="text-[10px] text-white bg-rose-500 px-3 py-1.5 rounded shadow-sm hover:scale-105 transition font-bold">归档本月</button>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-end mb-3 px-2">
+                    <h2 class="text-base text-charcoal font-bold tracking-wider">日常节律</h2>
+                    <button onclick="document.getElementById(&apos;modal-r&apos;).classList.remove(&apos;hidden&apos;)" class="w-7 h-7 flex items-center justify-center rounded-full border border-ash/50 text-ash hover:bg-ash hover:text-white transition shadow-sm bg-white/50">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                </div>
+                <p class="text-[9px] text-ash px-2 mb-3">· 点击圆圈完成打卡，左滑移除项目 ·</p>
+                <div id="routine-list" class="space-y-3 overflow-x-hidden pb-4"></div>
+            </div>
+
+            <!-- ================= 5. HORIZON ================= -->
+            <div id="tab-horizon" class="tab-content px-5 pt-2">
+                <div class="bg-ink rounded-2xl p-6 mb-8 relative overflow-hidden shadow-2xl">
+                    <div class="flex justify-between items-center mb-4 relative z-10">
+                        <h2 class="text-sm text-[#F9F8F6] font-bold">交互式世界迷雾</h2>
+                        <span id="map-count" class="text-[10px] text-wood-500 font-bold border border-wood-500 px-2 py-0.5 rounded">点亮 0 处</span>
+                    </div>
+                    <!--  动态生成的抽象网格地图 -->
+                    <div id="map-dots" class="grid grid-cols-[repeat(25,1fr)] gap-1.5 opacity-40 mt-4 relative z-20 mb-6"></div>
+                    
+                    <!--  真实地名打卡区 -->
+                    <div class="relative z-10 border-t border-white/10 pt-4">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <input id="new-place" type="text" placeholder="输入你想点亮的地名..." class="flex-1 bg-white/10 border border-white/20 rounded px-2 py-1 text-xs text-white outline-none">
+                            <button onclick="addPlace()" class="bg-wood-500 text-white text-xs font-bold px-3 py-1 rounded">点亮</button>
+                        </div>
+                        <div id="places-list" class="flex flex-wrap gap-2 max-h-24 overflow-y-auto"></div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-end mb-4 px-2">
+                    <h2 class="text-base text-charcoal font-bold tracking-wider">旅行基金</h2>
+                    <button onclick="addFund()" class="w-7 h-7 flex items-center justify-center rounded-full border border-ash/50 text-ash hover:bg-ash hover:text-white transition shadow-sm bg-white/50">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </button>
+                </div>
+                <div class="p-6 border border-white/60 rounded-2xl bg-white/70 shadow-premium shadow-inner-paper">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-[11px] text-ash mb-1 uppercase font-bold">Dream Project</p>
+                            <p class="text-2xl font-serif font-bold text-charcoal">¥ <span id="h-fund">0</span> <span class="text-ash text-sm font-sans">/ 30k</span></p>
+                        </div>
+                        <p class="text-lg font-serif font-bold text-wood-500" id="h-pct">0%</p>
+                    </div>
+                    <div class="w-full h-3 bg-paper border border-borderline rounded-full overflow-hidden p-[2px]">
+                        <div id="h-bar" class="h-full bg-wood-500 rounded-full shadow-sm transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ================= 底部导航 ================= -->
+        <nav class="absolute bottom-0 w-full pt-4 pb-8 bg-gradient-to-t from-[#F4F2ED] via-[#F4F2ED] to-transparent flex justify-around items-center px-4 z-50">
+            <button onclick="showTab(&apos;today&apos;)" class="nav-btn text-charcoal flex flex-col items-center group" data-tab="today"><span class="text-[10px] font-bold uppercase">Today</span><span class="w-1.5 h-1.5 bg-charcoal rounded-full mt-1.5 dot opacity-100"></span></button>
+            <button onclick="showTab(&apos;knowledge&apos;)" class="nav-btn text-ash flex flex-col items-center group" data-tab="knowledge"><span class="text-[10px] font-bold uppercase">Know</span><span class="w-1.5 h-1.5 bg-charcoal rounded-full mt-1.5 dot opacity-0"></span></button>
+            <button onclick="showTab(&apos;action&apos;)" class="nav-btn text-ash flex flex-col items-center group" data-tab="action"><span class="text-[10px] font-bold uppercase">Act</span><span class="w-1.5 h-1.5 bg-charcoal rounded-full mt-1.5 dot opacity-0"></span></button>
+            <button onclick="showTab(&apos;rhythm&apos;)" class="nav-btn text-ash flex flex-col items-center group" data-tab="rhythm"><span class="text-[10px] font-bold uppercase">Rhythm</span><span class="w-1.5 h-1.5 bg-charcoal rounded-full mt-1.5 dot opacity-0"></span></button>
+            <button onclick="showTab(&apos;horizon&apos;)" class="nav-btn text-ash flex flex-col items-center group" data-tab="horizon"><span class="text-[10px] font-bold uppercase">Horiz</span><span class="w-1.5 h-1.5 bg-charcoal rounded-full mt-1.5 dot opacity-0"></span></button>
+        </nav>
+
+        <!-- ================= 弹窗集合 ================= -->
+        <!-- 知识添加 -->
+        <div id="modal-k" class="hidden absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center">
+            <div class="bg-paper w-11/12 max-w-sm rounded-3xl p-6 shadow-2xl">
+                <h3 class="text-lg font-bold text-charcoal mb-4">添加学习资源</h3>
+                <select id="k-tag" class="w-full bg-white border border-borderline rounded-xl p-3 mb-3 text-sm font-bold outline-none"><option value="human">人文哲思</option><option value="social">社科商业</option><option value="science">科学技术</option><option value="art">美学艺术</option><option value="body">身心自我</option></select>
+                <select id="k-p" class="w-full bg-white border border-borderline rounded-xl p-3 mb-3 text-sm font-bold outline-none"><option value="weread">微信读书</option><option value="bilibili">B站</option><option value="xiaoyuzhou">小宇宙</option><option value="baidu">百度网盘</option><option value="ideal">看理想</option><option value="other">其他</option></select>
+                <input id="k-t" type="text" placeholder="资源名称" class="w-full bg-transparent border-b border-ash/30 p-2 mb-3 text-sm font-bold outline-none">
+                <input id="k-tp" type="number" placeholder="总进度数值 (如: 300)" class="w-full bg-transparent border-b border-ash/30 p-2 mb-6 text-sm font-bold outline-none">
+                <div class="flex justify-end space-x-4"><button onclick="document.getElementById(&apos;modal-k&apos;).classList.add(&apos;hidden&apos;)" class="text-sm font-bold text-ash px-4 py-2">取消</button><button onclick="saveK()" class="text-sm font-bold text-paper bg-charcoal px-6 py-2 rounded-full">添加</button></div>
+            </div>
+        </div>
+
+        <!-- 行动添加 -->
+        <div id="modal-a" class="hidden absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center">
+            <div class="bg-paper w-11/12 max-w-sm rounded-3xl p-6 shadow-2xl">
+                <h3 class="text-lg font-bold text-charcoal mb-4">建立新档案</h3>
+                <input id="a-t" type="text" placeholder="运动名称，如：网球" class="w-full bg-transparent border-b border-ash/30 p-2 mb-4 text-sm font-bold outline-none">
+                <input id="a-multi" type="number" step="0.5" value="1.0" placeholder="单次默认时长 (H)" class="w-full bg-transparent border-b border-ash/30 p-2 mb-6 text-sm font-bold outline-none">
+                <div class="flex justify-end space-x-4"><button onclick="document.getElementById(&apos;modal-a&apos;).classList.add(&apos;hidden&apos;)" class="text-sm font-bold text-ash px-4 py-2">取消</button><button onclick="saveA()" class="text-sm font-bold text-paper bg-moss-500 px-6 py-2 rounded-full">创建</button></div>
+            </div>
+        </div>
+
+        <!-- 节律添加 -->
+        <div id="modal-r" class="hidden absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center">
+            <div class="bg-paper w-11/12 max-w-sm rounded-3xl p-6 shadow-2xl">
+                <h3 class="text-lg font-bold text-charcoal mb-4">添加日常节律</h3>
+                <input id="r-t" type="text" placeholder="项目名称，如：复合维生素" class="w-full bg-transparent border-b border-ash/30 p-2 mb-4 text-sm font-bold outline-none">
+                <input id="r-sub" type="text" placeholder="备注说明，如：晨间饭后" class="w-full bg-transparent border-b border-ash/30 p-2 mb-6 text-sm font-bold outline-none">
+                <div class="flex justify-end space-x-4"><button onclick="document.getElementById(&apos;modal-r&apos;).classList.add(&apos;hidden&apos;)" class="text-sm font-bold text-ash px-4 py-2">取消</button><button onclick="saveR()" class="text-sm font-bold text-paper bg-rose-500 px-6 py-2 rounded-full">添加</button></div>
+            </div>
+        </div>
+
+        <!--  节律历史查看 -->
+        <div id="modal-r-history" class="hidden absolute inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center">
+            <div class="bg-paper w-11/12 max-w-sm rounded-3xl p-6 shadow-2xl max-h-[80vh] flex flex-col">
+                <h3 class="text-lg font-bold text-charcoal mb-4">往期周期记录</h3>
+                <div id="r-history-list" class="flex-1 overflow-y-auto space-y-3 mb-4"></div>
+                <button onclick="document.getElementById(&apos;modal-r-history&apos;).classList.add(&apos;hidden&apos;)" class="w-full text-sm font-bold text-ash py-2 bg-white rounded-lg border border-borderline">关闭</button>
+            </div>
+        </div>
+
+        <!-- 宇宙控制台 (导入导出) -->
+        <div id="modal-settings" class="hidden absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex justify-center items-center">
+            <div class="bg-paper w-11/12 max-w-sm rounded-3xl p-6 shadow-2xl">
+                <h3 class="text-xl font-serif font-bold text-charcoal mb-2">宇宙控制台</h3>
+                <p class="text-[10px] text-ash mb-4">M-Cycle 采用本地存储，换机前请务必备份代码。</p>
+                <textarea id="db-code" class="w-full h-32 bg-white border border-borderline rounded-xl p-3 text-[10px] text-ash font-mono focus:outline-none mb-4" placeholder="你的宇宙代码..."></textarea>
+                <div class="flex justify-between items-center mb-2"><button onclick="exportDB()" class="text-xs font-bold bg-ink text-white px-4 py-2 rounded-lg w-full mr-2">生成备份</button><button onclick="importDB()" class="text-xs font-bold border border-ink text-ink px-4 py-2 rounded-lg w-full ml-2">覆盖恢复</button></div>
+                <button onclick="document.getElementById(&apos;modal-settings&apos;).classList.add(&apos;hidden&apos;)" class="w-full mt-4 text-sm text-ash underline">关闭面板</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= 注入所有交互与核心 CRUD 数据库逻辑 ================= -->
+    <script>
+        //  数据库初始化与平滑升级
+        const defaultDB = {
+            k: [ { id: &apos;k1&apos;, p: &apos;weread&apos;, t: &apos;枪炮、病菌与钢铁&apos;, tag: &apos;social&apos;, cp: 45, tp: 458 } ],
+            a: [ { id: &apos;a1&apos;, t: &apos;网球 Tennis&apos;, multi: 1.5, days: [12, 16], notes: [] } ],
+            r: { s: null, e: null, meds: [], history: [] },
+            h: { fund: 21450, places: [] }
+        };
+        
+        let db = JSON.parse(localStorage.getItem(&apos;mcy_v2&apos;)) || defaultDB;
+        
+        // 数据结构向下兼容处理
+        db.a.forEach(a => { if(typeof a.notes === &apos;string&apos;) a.notes = []; });
+        if(!db.r.history) db.r.history = [];
+        if(!db.h.places) db.h.places = [];
+
+        const todayStr = new Date().toDateString();
+        const curMonth = new Date().toLocaleString(&apos;en-US&apos;, { month: &apos;short&apos;, year: &apos;numeric&apos; });
+        document.getElementById(&apos;cal-month&apos;).innerText = curMonth;
+
+        function saveDB() { localStorage.setItem(&apos;mcy_v2&apos;, JSON.stringify(db)); renderAll(); }
+
+        // 导航控制
+        function showTab(id) {
+            document.querySelectorAll(&apos;.tab-content&apos;).forEach(c => c.classList.remove(&apos;active&apos;));
+            document.getElementById(&apos;tab-&apos; + id).classList.add(&apos;active&apos;);
+            document.querySelectorAll(&apos;.nav-btn&apos;).forEach(b => { b.classList.remove(&apos;text-charcoal&apos;); b.classList.add(&apos;text-ash&apos;); b.querySelector(&apos;.dot&apos;).style.opacity = &apos;0&apos;; });
+            document.querySelector(`[data-tab="${id}"]`).classList.remove(&apos;text-ash&apos;); 
+            document.querySelector(`[data-tab="${id}"]`).classList.add(&apos;text-charcoal&apos;);
+            document.querySelector(`[data-tab="${id}"] .dot`).style.opacity = &apos;1&apos;;
+            const titles = { today:&apos;今日 Today&apos;, knowledge:&apos;知识 Knowledge&apos;, action:&apos;行动 Action&apos;, rhythm:&apos;节律 Rhythm&apos;, horizon:&apos;远望 Horizon&apos; };
+            document.getElementById(&apos;main-title&apos;).innerText = titles[id];
+        }
+
+        const pMeta = { weread: { n: &apos;微读&apos;, h: &apos;#B58D66&apos;, l: &apos;weread://&apos; }, bilibili: { n: &apos;B站&apos;, h: &apos;#FB7299&apos;, l: &apos;bilibili://&apos; }, xiaoyuzhou: { n: &apos;小宇宙&apos;, h: &apos;#222222&apos;, l: &apos;xiaoyuzhou://&apos; }, baidu: { n: &apos;网盘&apos;, h: &apos;#06A7FF&apos;, l: &apos;baiduyun://&apos; }, ideal: { n: &apos;看理想&apos;, h: &apos;#716D68&apos;, l: &apos;ideal://&apos; }, other: { n: &apos;通用&apos;, h: &apos;#758870&apos;, l: &apos;#&apos; } };
+        const tagMeta = { human: {n:&apos;人文哲思&apos;, c:&apos;#B58D66&apos;}, social: {n:&apos;社科商业&apos;, c:&apos;#758870&apos;}, science: {n:&apos;科学技术&apos;, c:&apos;#9B9484&apos;}, art: {n:&apos;美学艺术&apos;, c:&apos;#B65C53&apos;}, body: {n:&apos;身心自我&apos;, c:&apos;#E0DDD5&apos;} };
+
+        function renderAll() { renderToday(); renderKList(); renderPie(); renderAList(); renderRhythm(); renderHorizon(); attachSwipe(); }
+
+        // 1. Today
+        function renderToday() {
+            const box = document.getElementById(&apos;today-list&apos;); box.innerHTML = &apos;&apos;;
+            if(db.k.length > 0) {
+                let i = db.k[0];
+                box.innerHTML += `<div onclick="showTab(&apos;knowledge&apos;)" class="p-5 border border-white/60 rounded-xl bg-white/70 shadow-premium flex justify-between items-center backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition"><div class="flex items-center space-x-4"><div class="w-6 h-6 rounded-full border-2 border-wood-500"></div><span class="font-bold text-sm text-charcoal truncate w-48">${i.t}</span></div><span class="text-[10px] text-wood-500 font-bold tracking-widest">INPUT</span></div>`;
+            }
+            if(db.a.length > 0) {
+                let i = db.a[0];
+                box.innerHTML += `<div onclick="showTab(&apos;action&apos;)" class="p-5 border border-white/60 rounded-xl bg-white/70 shadow-premium flex justify-between items-center backdrop-blur-sm cursor-pointer hover:scale-[1.02] transition mt-4"><div class="flex items-center space-x-4"><div class="w-6 h-6 rounded-full border-2 border-moss-500"></div><span class="font-bold text-sm text-charcoal truncate w-48">${i.t}</span></div><span class="text-[10px] text-moss-500 font-bold tracking-widest">OUTPUT</span></div>`;
+            }
+            if(box.innerHTML === &apos;&apos;) box.innerHTML = `<p class="text-xs text-ash text-center py-4">宇宙空空如也，请去添加计划。</p>`;
+        }
+
+        // 2. Knowledge
+        function renderKList() {
+            const list = document.getElementById(&apos;knowledge-list&apos;); list.innerHTML = &apos;&apos;;
+            db.k.forEach(i => {
+                let m = pMeta[i.p], pct = i.tp>0 ? Math.min(100, Math.round((i.cp/i.tp)*100)) : 0;
+                list.innerHTML += `
+                <div class="p-4 bg-white/70 border border-white rounded-xl shadow-premium shadow-inner-paper relative group">
+                    <button onclick="db.k=db.k.filter(x=>x.id!==&apos;${i.id}&apos;);saveDB()" class="absolute top-2 right-2 text-ash/30 hover:text-rose-500 text-xs px-2 rounded">×</button>
+                    <div class="flex justify-between items-center mb-3 pr-4">
+                        <a href="${m.l}" class="flex items-center space-x-2"><span class="text-[10px] border px-1 rounded" style="color:${m.h};border-color:${m.h}">${m.n} </span><span class="text-sm font-bold text-charcoal line-clamp-1">${i.t}</span></a>
+                        <span class="text-sm font-serif font-bold" style="color:${m.h}">${pct}%</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-paper p-2 rounded-lg border border-borderline">
+                        <input type="number" value="${i.cp||&apos;&apos;}" onchange="updateK(&apos;${i.id}&apos;, &apos;cp&apos;, this.value)" class="w-full bg-transparent text-center font-bold outline-none text-xs"> <span class="text-xs text-ash">/</span>
+                        <input type="number" value="${i.tp||&apos;&apos;}" onchange="updateK(&apos;${i.id}&apos;, &apos;tp&apos;, this.value)" class="w-full bg-transparent text-center font-bold outline-none text-xs">
+                    </div>
+                </div>`;
+            });
+        }
+        function updateK(id, field, val) { let i = db.k.find(x=>x.id===id); if(i) { i[field] = Number(val); saveDB(); } }
+        function saveK() {
+            let t = document.getElementById(&apos;k-t&apos;).value; if(!t) return;
+            db.k.push({ id: &apos;k&apos;+Date.now(), p: document.getElementById(&apos;k-p&apos;).value, tag: document.getElementById(&apos;k-tag&apos;).value, t: t, cp: 0, tp: Number(document.getElementById(&apos;k-tp&apos;).value) });
+            document.getElementById(&apos;modal-k&apos;).classList.add(&apos;hidden&apos;); document.getElementById(&apos;k-t&apos;).value=&apos;&apos;; saveDB();
+        }
+        function renderPie() {
+            document.getElementById(&apos;pie-total-count&apos;).innerText = db.k.length;
+            let counts = { human:0, social:0, science:0, art:0, body:0 };
+            db.k.forEach(i => { if(counts[i.tag] !== undefined) counts[i.tag]++; });
+            let total = db.k.length || 1, grad = [], acc = 0, legendHTML = &apos;&apos;;
+            for(let key in counts) {
+                let pct = Math.round((counts[key]/total)*100);
+                grad.push(`${tagMeta[key].c} ${acc}% ${acc+pct}%`); acc += pct;
+                legendHTML += `<div class="flex justify-between"><div><span class="w-2 h-2 rounded-full inline-block mr-2" style="background:${tagMeta[key].c}"></span>${tagMeta[key].n}</div><span class="text-ash">${db.k.length===0?&apos;0&apos;:pct}%</span></div>`;
+            }
+            document.getElementById(&apos;dynamic-pie&apos;).style.background = `conic-gradient(${grad.join(&apos;, &apos;)})`;
+            document.getElementById(&apos;pie-legend&apos;).innerHTML = legendHTML;
+        }
+
+        // 3. Action 
+        function renderAList() {
+            const list = document.getElementById(&apos;action-list&apos;); list.innerHTML = &apos;&apos;;
+            db.a.forEach(i => {
+                let cal = &apos;&apos;; for(let n=0;n<4;n++) cal+=`<div class="py-1 opacity-20">2${7+n}</div>`;
+                for(let d=1; d<=31; d++) {
+                    let on = i.days.includes(d);
+                    //  修复暗黑模式下的数字颜色 (使用 #D0D0D0)
+                    cal += `<div class="py-1 flex justify-center items-center cursor-pointer" onclick="toggleA(&apos;${i.id}&apos;,${d})"><div class="w-7 h-7 flex items-center justify-center font-bold ${on?&apos;bg-moss-500 text-white rounded-md scale-105&apos;:&apos;hover:border border-moss-500/30 text-[#D0D0D0]&apos;}">${d}</div></div>`;
+                }
+                
+                //  教练手记列表化
+                let notesHTML = &apos;&apos;;
+                i.notes.forEach((n, idx) => {
+                    notesHTML += `
+                    <div class="p-3 bg-paper rounded-lg border border-borderline mb-2 relative group">
+                        <button onclick="delANote(&apos;${i.id}&apos;, ${idx})" class="absolute top-2 right-2 text-ash/30 hover:text-rose-500 text-[10px]">×</button>
+                        <p class="text-[10px] text-ash font-bold mb-1">${n.d}</p>
+                        <p class="text-sm text-charcoal font-medium">${n.c}</p>
+                    </div>`;
+                });
+
+                list.innerHTML += `
+                <div class="mb-10 relative">
+                    <button onclick="db.a=db.a.filter(x=>x.id!==&apos;${i.id}&apos;);saveDB()" class="absolute top-0 right-0 text-ash/30 hover:text-rose-500 text-[10px] p-1">删除档案</button>
+                    <h3 class="text-base font-bold text-charcoal mb-3">${i.t}</h3>
+                    <div class="bg-ink rounded-2xl p-6 shadow-xl mb-4">
+                        <div class="grid grid-cols-7 gap-y-3 text-center text-[10px] text-moss-100/50 mb-2"><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div></div>
+                        <div class="grid grid-cols-7 gap-y-3 text-center text-sm font-medium">${cal}</div>
+                        <div class="mt-6 pt-4 border-t border-white/10 flex justify-between items-end text-[#F9F8F6]">
+                            <div><p class="text-[10px] text-[#A0A0A0] mb-0.5 flex items-center">按 <input type="number" step="0.5" value="${i.multi}" onchange="updateAMulti(&apos;${i.id}&apos;,this.value)" class="w-8 bg-transparent text-moss-500 border-b border-moss-500 outline-none text-center mx-1 font-bold"> H/次</p><p class="text-xl font-serif text-moss-500 font-bold">${(i.days.length*i.multi).toFixed(1)} <span class="text-[10px] text-white font-sans">H</span></p></div>
+                            <div class="text-right"><p class="text-[10px] text-[#A0A0A0] mb-0.5">本月</p><p class="text-lg font-serif font-bold">${i.days.length} <span class="text-[10px] font-sans">次</span></p></div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 bg-white/70 border border-white rounded-xl shadow-premium shadow-inner-paper">
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-[11px] text-moss-500 font-bold uppercase tracking-wider">教练手记</p>
+                            <!--  新增：添加记录符号 -->
+                            <button onclick="addANote(&apos;${i.id}&apos;)" class="text-[10px] text-moss-500 border border-moss-500 px-2 py-0.5 rounded flex items-center hover:bg-moss-500 hover:text-white transition">+ 新增</button>
+                        </div>
+                        <div class="max-h-40 overflow-y-auto">
+                            ${notesHTML || &apos;<p class="text-xs text-ash text-center py-2">暂无手记</p>&apos;}
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+        function toggleA(id, d) { let i = db.a.find(x=>x.id===id); if(i.days.includes(d)) i.days=i.days.filter(x=>x!==d); else i.days.push(d); saveDB(); }
+        function updateAMulti(id, v) { db.a.find(x=>x.id===id).multi=Number(v); saveDB(); }
+        function addANote(id) {
+            let text = prompt(&apos;请输入本次的训练手记：&apos;);
+            if(text) {
+                let dateStr = new Date().toLocaleString(&apos;en-US&apos;, { month: &apos;short&apos;, day: &apos;numeric&apos; });
+                db.a.find(x=>x.id===id).notes.unshift({d: dateStr, c: text});
+                saveDB();
+            }
+        }
+        function delANote(id, idx) { db.a.find(x=>x.id===id).notes.splice(idx, 1); saveDB(); }
+        function saveA() { let t=document.getElementById(&apos;a-t&apos;).value; if(!t) return; db.a.push({id:&apos;a&apos;+Date.now(), t:t, multi:Number(document.getElementById(&apos;a-multi&apos;).value)||1, days:[], notes:[]}); document.getElementById(&apos;modal-a&apos;).classList.add(&apos;hidden&apos;); document.getElementById(&apos;a-t&apos;).value=&apos;&apos;; saveDB(); }
+
+        // 4. Rhythm
+        function renderRhythm() {
+            const rc = document.getElementById(&apos;rhythm-calendar&apos;); rc.innerHTML=&apos;&apos;;
+            for(let i=0; i<4; i++) rc.innerHTML += `<div class="py-1 opacity-20">2${7+i}</div>`;
+            let s=db.r.s, e=db.r.e;
+            for(let d=1; d<=31; d++) {
+                let act="", bg="";
+                if(s===d && !e) act="bg-rose-500 text-white rounded-full scale-110 shadow-md"; else if(s===d) {act="bg-rose-500 text-white rounded-full z-10"; bg="background:linear-gradient(90deg,transparent 50%,rgba(182,92,83,0.2) 50%)";} else if(e===d) {act="bg-rose-500 text-white rounded-full z-10"; bg="background:linear-gradient(90deg,rgba(182,92,83,0.2) 50%,transparent 50%)";} else if(s&&e&&d>s&&d<e) {act="text-rose-100"; bg="background:rgba(182,92,83,0.2)";}
+                rc.innerHTML+=`<div class="py-1.5 relative flex justify-center items-center cursor-pointer" onclick="setRCal(${d})" style="${bg}"><div class="w-7 h-7 flex items-center justify-center font-bold transition-all ${act}">${d}</div></div>`;
+            }
+            let days = (s&&e) ? (e-s+1) : (s?1:0);
+            document.getElementById(&apos;duration-text&apos;).innerText = days;
+
+            // 渲染往期历史
+            const hl = document.getElementById(&apos;r-history-list&apos;); hl.innerHTML = &apos;&apos;;
+            if(db.r.history.length === 0) hl.innerHTML = &apos;<p class="text-xs text-ash text-center py-4">暂无历史记录</p>&apos;;
+            db.r.history.slice().reverse().forEach(h => {
+                hl.innerHTML += `<div class="p-3 bg-paper border border-borderline rounded-lg flex justify-between items-center"><span class="text-sm font-bold text-charcoal">${h.m}</span><span class="text-xs text-rose-500 font-bold">${h.days} 天 <span class="text-[10px] text-ash font-normal ml-2">起始: ${h.s}日</span></span></div>`;
+            });
+
+            const rl = document.getElementById(&apos;routine-list&apos;); rl.innerHTML=&apos;&apos;;
+            db.r.meds.forEach(i => {
+                let done = (i.date === todayStr);
+                rl.innerHTML += `
+                <div class="relative rounded-xl overflow-hidden shadow-sm med-item mb-3">
+                    <div class="absolute inset-0 bg-rose-500 flex justify-end items-center pr-6 cursor-pointer" onclick="delR(&apos;${i.id}&apos;)">
+                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="swipe-layer p-4 bg-white/80 border border-white flex items-center space-x-4 relative z-10 swipe-transition ${done?&apos;opacity-60&apos;:&apos;&apos;}">
+                        <div onclick="toggleRDate(&apos;${i.id}&apos;)" class="w-6 h-6 rounded-full border-2 ${done?&apos;border-sand-500 bg-sand-100&apos;:&apos;border-ash&apos;} flex items-center justify-center shrink-0 cursor-pointer"><div class="w-3 h-3 rounded-full ${done?&apos;bg-sand-500&apos;:&apos;bg-transparent&apos;}"></div></div>
+                        <div><p class="text-sm font-bold text-charcoal ${done?&apos;line-through decoration-sand-500&apos;:&apos;&apos;}">${i.t}</p><p class="text-[10px] text-ash">${i.sub}</p></div>
+                    </div>
+                </div>`;
+            });
+        }
+        window.setRCal = (d) => { if(!db.r.s || (db.r.s&&db.r.e)){db.r.s=d;db.r.e=null;}else if(d>db.r.s)db.r.e=d;else db.r.s=d; saveDB(); }
+        //  归档历史功能
+        window.archiveCal = () => { 
+            if(!db.r.s) return alert("请先选择周期起始日！");
+            let days = (db.r.s && db.r.e) ? (db.r.e - db.r.s + 1) : 1;
+            db.r.history.push({ m: curMonth, s: db.r.s, e: db.r.e, days: days });
+            db.r.s=null; db.r.e=null; 
+            saveDB(); 
+            alert(&apos;已归档至历史记录&apos;);
+        }
+        window.toggleRDate = (id) => { let i = db.r.meds.find(x=>x.id===id); i.date = (i.date===todayStr) ? &apos;&apos; : todayStr; saveDB(); }
+        window.delR = (id) => { db.r.meds = db.r.meds.filter(x=>x.id!==id); saveDB(); }
+        function saveR() { let t=document.getElementById(&apos;r-t&apos;).value; if(!t) return; db.r.meds.push({id:&apos;r&apos;+Date.now(), t:t, sub:document.getElementById(&apos;r-sub&apos;).value, date:&apos;&apos;}); document.getElementById(&apos;modal-r&apos;).classList.add(&apos;hidden&apos;); document.getElementById(&apos;r-t&apos;).value=&apos;&apos;; saveDB(); }
+
+        // 5. Horizon (动态地名打卡)
+        function renderHorizon() {
+            // 抽象网格自动亮起对应数量的点
+            const md = document.getElementById(&apos;map-dots&apos;); md.innerHTML=&apos;&apos;;
+            let totalPlaces = db.h.places.length;
+            document.getElementById(&apos;map-count&apos;).innerText = `点亮 ${totalPlaces} 处`;
+            for(let i=0; i<150; i++) {
+                let on = i < totalPlaces;
+                md.innerHTML += `<div class="w-1.5 h-1.5 rounded-full transition ${on?&apos;bg-wood-500 opacity-100 shadow-[0_0_8px_#B58D66]&apos;:&apos;bg-[#716D68] opacity-30&apos;}"></div>`;
+            }
+            // 渲染地名标签
+            const plist = document.getElementById(&apos;places-list&apos;); plist.innerHTML = &apos;&apos;;
+            if(totalPlaces === 0) plist.innerHTML = &apos;<p class="text-xs text-white/50 w-full text-center py-2">暂无足迹，快去探索世界吧</p>&apos;;
+            db.h.places.forEach((p, idx) => {
+                plist.innerHTML += `<span class="text-[10px] text-wood-500 border border-wood-500 bg-ink px-2 py-1 rounded-full cursor-pointer hover:bg-wood-500 hover:text-ink transition" onclick="delPlace(${idx})">${p}</span>`;
+            });
+
+            let pct = (db.h.fund / 30000) * 100;
+            document.getElementById(&apos;h-fund&apos;).innerText = db.h.fund;
+            document.getElementById(&apos;h-pct&apos;).innerText = pct.toFixed(1) + &apos;%&apos;;
+            document.getElementById(&apos;h-bar&apos;).style.width = (pct>100?100:pct) + &apos;%&apos;;
+        }
+        window.addPlace = () => {
+            let input = document.getElementById(&apos;new-place&apos;);
+            if(input.value.trim()) { db.h.places.unshift(input.value.trim()); input.value = &apos;&apos;; saveDB(); }
+        }
+        window.delPlace = (idx) => { if(confirm(&apos;确定移除这个足迹吗？&apos;)) { db.h.places.splice(idx, 1); saveDB(); } }
+        window.addFund = () => { let v = prompt(&apos;存入金额 (如: 500):&apos;); if(v && !isNaN(v)) { db.h.fund += Number(v); saveDB(); } }
+
+        // 左滑删除绑定
+        function attachSwipe() {
+            document.querySelectorAll(&apos;.med-item&apos;).forEach(item => {
+                let sX = 0, isD = false; const layer = item.querySelector(&apos;.swipe-layer&apos;);
+                layer.onmousedown=e=>{sX=e.clientX; isD=true; layer.classList.remove(&apos;swipe-transition&apos;);};
+                layer.ontouchstart=e=>{sX=e.touches[0].clientX; isD=true; layer.classList.remove(&apos;swipe-transition&apos;);};
+                window.onmousemove=e=>{if(isD){let d=e.clientX-sX; if(d<0&&d>-90) layer.style.transform=`translateX(${d}px)`;}};
+                window.ontouchmove=e=>{if(isD){let d=e.touches[0].clientX-sX; if(d<0&&d>-90) layer.style.transform=`translateX(${d}px)`;}};
+                const end = e => { if(!isD)return; isD=false; layer.classList.add(&apos;swipe-transition&apos;); let cX = e.clientX||(e.changedTouches?e.changedTouches[0].clientX:sX); layer.style.transform = (cX-sX < -45) ? &apos;translateX(-70px)&apos; : &apos;translateX(0px)&apos;; };
+                window.onmouseup=end; window.ontouchend=end;
+            });
+        }
+
+        // 数据备份
+        function exportDB() { document.getElementById(&apos;db-code&apos;).value = btoa(JSON.stringify(db)); }
+        function importDB() { try { db = JSON.parse(atob(document.getElementById(&apos;db-code&apos;).value)); saveDB(); alert(&apos;恢复成功！&apos;); document.getElementById(&apos;modal-settings&apos;).classList.add(&apos;hidden&apos;); } catch(e) { alert(&apos;代码格式错误！&apos;); } }
+
+        renderAll();
+    </script>
+</body>
+</html>
